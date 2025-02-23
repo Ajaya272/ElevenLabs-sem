@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Complete ElevenLabs Text-to-Speech Integration with Full Model Support and Advanced Features">
+    <meta name="keywords" content="ElevenLabs TTS, AI Voice Generation, Speech Synthesis, Text-to-Speech API, AI Models">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Complete ElevenLabs TTS Integration Platform">
+    <meta property="og:description" content="Advanced text-to-speech conversion with full model support and voice customization">
+    
+    <title>Complete ElevenLabs TTS Integration | AI Voice Studio</title>
+
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--background-color);
+            line-height: 1.6;
+            color: #1e293b;
+        }
+
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .settings-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            resize: vertical;
+            font-size: 1rem;
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .voice-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .voice-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        #audioContainer {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .loader {
+            border: 4px solid #f1f1f1;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ElevenLabs Full Feature Integration</h1>
+        <p>Advanced Text-to-Speech Platform with Complete Model Control</p>
+    </header>
+
+    <main>
+        <div class="dashboard">
+            <div class="control-panel">
+                <div class="settings-card">
+                    <h2>Text Input</h2>
+                    <textarea id="inputText" placeholder="Enter text to convert..."></textarea>
+                </div>
+
+                <div class="settings-card">
+                    <h2>Voice Settings</h2>
+                    <div id="voiceSelection">
+                        <!-- Dynamically populated -->
+                    </div>
+                    
+                    <label>Model Selection</label>
+                    <select id="modelSelect">
+                        <option value="eleven_monolingual_v1">Monolingual v1</option>
+                        <option value="eleven_multilingual_v1">Multilingual v1</option>
+                        <option value="eleven_multilingual_v2">Multilingual v2</option>
+                    </select>
+
+                    <label>Stability</label>
+                    <input type="range" id="stability" min="0" max="1" step="0.1" value="0.5">
+
+                    <label>Similarity Boost</label>
+                    <input type="range" id="similarity" min="0" max="1" step="0.1" value="0.5">
+                </div>
+
+                <button onclick="handleConversion()" class="generate-button">
+                    Generate Speech
+                </button>
+
+                <div id="audioContainer"></div>
+            </div>
+
+            <div class="settings-card">
+                <h2>Available Voices</h2>
+                <div class="voice-gallery" id="voiceGallery">
+                    <!-- Voices loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_KEY = 'sk_9b1ccb15d7eeb366ebb166e69f0538128e9a12eeb1c9df0f';
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadVoices();
+        });
+
+        // Load available voices
+        async function loadVoices() {
+            try {
+                const response = await fetch('https://api.elevenlabs.io/v1/voices', {
+                    headers: {
+                        'xi-api-key': API_KEY
+                    }
+                });
+
+                const data = await response.json();
+                populateVoiceSelection(data.voices);
+                createVoiceGallery(data.voices);
+            } catch (error) {
+                console.error('Error loading voices:', error);
+            }
+        }
+
+        // Populate voice selection dropdown
+        function populateVoiceSelection(voices) {
+            const voiceSelect = document.createElement('select');
+            voiceSelect.id = 'voiceSelect';
+            
+            voices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.voice_id;
+                option.textContent = voice.name;
+                voiceSelect.appendChild(option);
+            });
+
+            document.getElementById('voiceSelection').appendChild(voiceSelect);
+        }
+
+        // Create voice gallery
+        function createVoiceGallery(voices) {
+            const gallery = document.getElementById('voiceGallery');
+            gallery.innerHTML = voices.map(voice => `
+                <div class="voice-card">
+                    <h3>${voice.name}</h3>
+                    <p>${voice.labels?.description || 'Professional voice'}</p>
+                    <p>Category: ${voice.category}</p>
+                    <button onclick="previewVoice('${voice.voice_id}')">Preview</button>
+                </div>
+            `).join('');
+        }
+
+        // Handle voice preview
+        async function previewVoice(voiceId) {
+            const previewText = "This is a preview of how this voice sounds.";
+            await convertTextToSpeech(previewText, voiceId, 0.5, 0.5);
+        }
+
+        // Main conversion handler
+        async function handleConversion() {
+            const text = document.getElementById('inputText').value;
+            const voiceId = document.getElementById('voiceSelect').value;
+            const modelId = document.getElementById('modelSelect').value;
+            const stability = document.getElementById('stability').value;
+            const similarity = document.getElementById('similarity').value;
+
+            if (!text) {
+                alert('Please enter text to convert');
+                return;
+            }
+
+            showLoadingState();
+            
+            try {
+                await convertTextToSpeech(text, voiceId, stability, similarity, modelId);
+            } catch (error) {
+                showErrorState(error);
+            }
+        }
+
+        // Core conversion function
+        async function convertTextToSpeech(text, voiceId, stability, similarity, modelId) {
+            const response = await fetch(
+                `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'audio/mpeg',
+                        'Content-Type': 'application/json',
+                        'xi-api-key': API_KEY
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        model_id: modelId,
+                        voice_settings: {
+                            stability: parseFloat(stability),
+                            similarity_boost: parseFloat(similarity)
+                        }
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.statusText}`);
+            }
+
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            renderAudioPlayer(audioUrl);
+        }
+
+        // UI State Management
+        function showLoadingState() {
+            document.getElementById('audioContainer').innerHTML = `
+                <div class="loader"></div>
+                <p>Generating speech...</p>
+            `;
+        }
+
+        function renderAudioPlayer(url) {
+            document.getElementById('audioContainer').innerHTML = `
+                <audio controls autoplay style="width: 100%">
+                    <source src="${url}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            `;
+        }
+
+        function showErrorState(error) {
+            document.getElementById('audioContainer').innerHTML = `
+                <div class="error-state">
+                    <p>Error: ${error.message}</p>
+                    <p>Please try again or check your API key</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
